@@ -25,7 +25,10 @@ func (e ErrDuplicateInTree) Error() string {
 }
 
 func (t *Tree) Insert(v int) error {
-	if v < t.Value {
+	if t.Value == 0 {
+		t.Value = v
+		return nil
+	} else if v < t.Value {
 		if(t.Left == nil) {
 			t.Left = &Tree{nil, v, nil}
 			return nil
@@ -52,10 +55,9 @@ func buildTree(k int) *Tree {
 		values = append(values, k*i)
 	}
 	// Create tree, adding nodes in random order
-	root := Tree{nil, values[treeSize/2], nil}
+	root := Tree{nil, 0, nil}
 	indicesUsed := make(map[int]bool)
-	indicesUsed[treeSize/2] = true
-	usedCount := 1
+	usedCount := 0
 	for usedCount < treeSize {
 		index := rand.Intn(treeSize)
 		_, exists := indicesUsed[index]
