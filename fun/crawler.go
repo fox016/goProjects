@@ -13,12 +13,7 @@ type Fetcher interface {
 	Fetch(url string) (body string, urls []string, err error)
 }
 
-type ConcurrentMap struct {
-	visited map[string]bool
-	mux sync.Mutex
-}
-
-var cmap ConcurrentMap
+var cmap sync.Map
 var logger log.Logger
 var wg sync.WaitGroup
 
@@ -31,9 +26,7 @@ func Crawl(url string, depth int, fetcher Fetcher) {
 		return
 	}
 	// Base case: URL already visited
-	cmap.mux.Lock()
-	_, exists := cmap.visited[url]
-	cmap.mux.Unlock()
+	_, exists := cmap.Load(url)
 	if exists {
 		return
 	}
@@ -45,9 +38,7 @@ func Crawl(url string, depth int, fetcher Fetcher) {
 		return
 	}
 	// Mark URL as visited
-	cmap.mux.Lock()
-	cmap.visited[url] = true
-	cmap.mux.Unlock()
+	cmap.Store(url, true)
 	// Print display
 	logger.Printf("found: %s %q\n", url, body)
 	// Recursive calls to new URLs
@@ -60,7 +51,6 @@ func Crawl(url string, depth int, fetcher Fetcher) {
 
 func main() {
 	logger = *log.New(os.Stdout, "", 0)
-	cmap.visited = make(map[string]bool)
 	wg = sync.WaitGroup{}
 	wg.Add(1)
 	go Crawl("https://golang.org/", 4, fetcher)
